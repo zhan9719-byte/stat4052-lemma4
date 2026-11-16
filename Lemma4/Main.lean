@@ -1,4 +1,5 @@
 import Lemma4.Spectral
+import Lemma4.TraceBound
 
 namespace Lemma4
 
@@ -28,5 +29,15 @@ theorem lemma4_of_trace_sq_le (X : Matrix (Fin n) (Fin p) ℝ)
     rw [Finset.inter_comm A B]
     exact_mod_cast Finset.card_sdiff_add_card_inter B A
   linarith
+
+/-- **Lemma 4** (Shen, Pan, Zhu & Zhou 2013), for any real matrix `X` with no rank
+assumption, any column subsets `A`, `B`, and any `r ≥ 2`:
+`Tr((P_A - P_B)^r) ≤ Tr((P_A - P_B)^2) ≤ |A| + |B| - 2|A ∩ B|`. -/
+theorem lemma4_main (X : Matrix (Fin n) (Fin p) ℝ)
+    (A B : Finset (Fin p)) (r : ℕ) (hr : 2 ≤ r) :
+    let D := columnProjection X A - columnProjection X B
+    LinearMap.trace ℝ _ (D ^ r) ≤ LinearMap.trace ℝ _ (D ^ 2) ∧
+      LinearMap.trace ℝ _ (D ^ 2) ≤ (A.card : ℝ) + (B.card : ℝ) - 2 * ((A ∩ B).card : ℝ) :=
+  lemma4_of_trace_sq_le X A B r hr (trace_sq_le_card_sdiff X A B)
 
 end Lemma4
