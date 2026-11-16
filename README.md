@@ -2,10 +2,8 @@
 
 This Lean 4 project formalizes both inequalities in Lemma 4 of Shen, Pan, Zhu, and Zhou (2013). Let $P_A$ and $P_B$ be the orthogonal projections onto the spans of the columns of a real matrix $X$ indexed by $A$ and $B$. For every natural number $r \ge 2$, `Lemma4.lemma4_main` proves
 
-```math
-\operatorname{tr}((P_A-P_B)^r)
-\le \operatorname{tr}((P_A-P_B)^2)
-\le |A|+|B|-2|A\cap B|.
+```text
+tr((P_A - P_B)^r) ≤ tr((P_A - P_B)^2) ≤ |A| + |B| - 2|A ∩ B|
 ```
 
 The theorem applies to arbitrary real matrices, including rank-deficient column selections. [Original paper](https://doi.org/10.1007/s10463-012-0396-3)
