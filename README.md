@@ -1,15 +1,24 @@
 # Trace Powers of Orthogonal Projection Differences
 
-This Lean 4 project formalizes the first inequality in Lemma 4 of Shen, Pan, Zhu, and Zhou (2013). For two sets of columns of a real matrix, let `P` and `Q` be the orthogonal projections onto their spans. The theorem bounds the trace of `(P - Q)^r` by the trace of `(P - Q)^2` for every natural number `r ≥ 2`. It applies to arbitrary real matrices, including rank-deficient column selections. [Original paper](https://doi.org/10.1007/s10463-012-0396-3)
+This Lean 4 project formalizes both inequalities in Lemma 4 of Shen, Pan, Zhu, and Zhou (2013). Let $P_A$ and $P_B$ be the orthogonal projections onto the spans of the columns of a real matrix $X$ indexed by $A$ and $B$. For every natural number $r \ge 2$, `Lemma4.lemma4_main` proves
+
+```math
+\operatorname{tr}((P_A-P_B)^r)
+\le \operatorname{tr}((P_A-P_B)^2)
+\le |A|+|B|-2|A\cap B|.
+```
+
+The theorem applies to arbitrary real matrices, including rank-deficient column selections. [Original paper](https://doi.org/10.1007/s10463-012-0396-3)
 
 ## Build
 
-Run the following from the project root with Lean managed by Elan. The toolchain and manifest pin Lean and Mathlib to reproducible versions.
+Run the following from the project root with Lean managed by Elan. The toolchain file and dependency manifest pin Lean and Mathlib to `v4.31.0`.
 
 ```sh
 lake exe cache get \
   Mathlib.Analysis.InnerProductSpace.Projection.FiniteDimensional \
   Mathlib.Analysis.InnerProductSpace.Spectrum \
+  Mathlib.Analysis.InnerProductSpace.Trace \
   Mathlib.LinearAlgebra.Trace \
   Mathlib.Tactic.Linarith
 lake build
@@ -19,23 +28,24 @@ lake build
 
 | File | Contents |
 | --- | --- |
-| `Lemma4/Defs.lean` | `projector`, `columnVector`, `columnSpan`, and `columnProjection`, in the namespace `Lemma4` |
-| `Lemma4/Spectral.lean` | `trace_pow_le_trace_sq` for two subspaces of a finite-dimensional real inner-product space |
-| `Lemma4/Main.lean` | `trace_pow_le_trace_sq_for_columns` for a real design matrix, and `lemma4_of_trace_sq_le` to combine the two inequalities |
+| [Lemma4/Defs.lean](Lemma4/Defs.lean) | Defines `projector`, `columnVector`, `columnSpan`, and `columnProjection`. |
+| [Lemma4/Spectral.lean](Lemma4/Spectral.lean) | Proves the first inequality in `trace_pow_le_trace_sq`. |
+| [Lemma4/TraceBound.lean](Lemma4/TraceBound.lean) | Proves the second inequality in `trace_sq_le_card_sdiff`. |
+| [Lemma4/Main.lean](Lemma4/Main.lean) | Combines the two results in `lemma4_main` and expresses the cardinality bound in the paper's form. |
 
-## Connect the trace bound
+The spectral proof bounds the eigenvalues of the projection difference in $[-1,1]$ and compares their powers term by term. The trace proof expands the square and uses the dimension of the subspace intersection as a lower bound on the trace of the product. A count of the differing column indices then bounds the resulting dimension expression.
 
-Import `Lemma4.Defs` and `Mathlib.LinearAlgebra.Trace` for the trace and dimension proof. The common ambient space is `EuclideanSpace ℝ (Fin n)`, and every projection is a linear endomorphism of that space. With `open Lemma4`, the required conclusion for `X : Matrix (Fin n) (Fin p) ℝ` and `A B : Finset (Fin p)` is
+## Verify the main theorem
 
-```lean
-LinearMap.trace ℝ _ ((columnProjection X A - columnProjection X B) ^ 2) ≤
-  ((A \ B).card : ℝ) + ((B \ A).card : ℝ)
+After building, run the following to check the theorem statement and its axiom dependencies.
+
+```sh
+lake env lean --stdin <<'LEAN'
+import Lemma4
+
+#check Lemma4.lemma4_main
+#print axioms Lemma4.lemma4_main
+LEAN
 ```
 
-Pass this proof as `hTraceBound` to `lemma4_of_trace_sq_le X A B r hr`. The assembly theorem then gives the two inequalities with the cardinality bound written in the paper's form, `|A| + |B| - 2 |A ∩ B|`.
-
-## Proof dependencies
-
-The spectral proof works with finite-dimensional real inner-product spaces. Each orthogonal projection has a quadratic form in `[0, 1]` on unit vectors. For a unit eigenvector of the difference, subtracting the two quadratic forms bounds its eigenvalue in `[-1, 1]`. Diagonalization expresses each trace as a sum of powers, and the scalar inequality holds term by term.
-
-`#print axioms` on `Lemma4.trace_pow_le_trace_sq_for_columns` and `Lemma4.lemma4_of_trace_sq_le` lists `propext`, `Classical.choice`, and `Quot.sound`. The assembly theorem takes the second inequality as an explicit proof argument.
+The axiom check lists Lean's standard axioms `propext`, `Classical.choice`, and `Quot.sound`.
